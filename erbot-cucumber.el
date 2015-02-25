@@ -152,11 +152,13 @@ list containing a process handle."
 
 ;;;; Bot-exposed functions
 
-(defun fs-test (host)
+(defun fs-test (&optional host)
   "Tests the desired host from *erbot-cucumber-hosts-alist*"
-  (if (assoc host *erbot-cucumber-host-alist*)
-      (erbot-cucumber-begin-test (symbol-name host))
-    (concat "What's a " (symbol-name host) "?")))
+  (if (null host)
+      (erbot-cucumber-begin-test *erbot-cucumber-default-host*)
+    (if (assoc host *erbot-cucumber-host-alist*)
+        (erbot-cucumber-begin-test (symbol-name host))
+      (concat "What's a " (symbol-name host) "?"))))
 
 (defun fs-stop (host)
   "Stops a test of a host in *erbot-cucumber-hosts-alist*"
