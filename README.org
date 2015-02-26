@@ -1,0 +1,301 @@
+#+TITLE:Erbot Cucumber
+#+AUTHOR:Archenoth
+#+STARTUP:hidestars
+
+Erbot Cucumber is an [[http://www.emacswiki.org/emacs/ErBot][Erbot]] based [[https://cukes.info/][Cucumber]] test-suite runner...
+
+Pretty much, it allows you to issue commands to a bot in an IRC
+channel and -- when commanded, your robot slave will fire up an
+instance of Cucumber, spit out a URL to the IRC room that tells you
+where you can find the results, then proceed to BDD test the server
+autonomously.
+
+When a test is complete, the bot pings the room again giving you a
+heads up when it is all finished.
+
+You can run as many tests simultaneously as your resources allow.
+
+A typical test command would likely look like the following:
+#+BEGIN_EXAMPLE
+  <User> ,test staging
+  <Bot> Started. Results will populate at http://example.com/cucumber/staging.html
+#+END_EXAMPLE
+
+And then some time later:
+#+BEGIN_EXAMPLE  .
+  <Bot> The test for staging is now complete... You may view results here:
+        http://example.com/cucumber/staging.html
+#+END_EXAMPLE
+
+* Requirements
+This project assumes you have:
+
+- A Unix-like operating system (Or, [[http://www.mingw.org/][MinGW]] or [[https://www.cygwin.com/][Cygwin]] in your path)
+- Emacs 24 or later (It will likely work on Emacs 23, but is untested)
+- The ability to run Cucumber tests on the box the bot runs on
+- An HTTP server
+
+* Installation
+All you need to do to install this is to load [[file:./erbot-cucumber.el][erbot-cucumber.el]] in the
+configuration file for your erbot-running version of Emacs.
+
+So in your =.emacs= or =init.el=, you should have a line like:
+#+BEGIN_SRC elisp
+  (load "/path/to/erbot-cucumber.el")
+#+END_SRC
+(...obviously replacing =/path/to/erbot-cucumber.el= with the actual
+path of that file.)
+
+After it is loaded, all you need to do is configure it!
+
+* Configuration
+After erbot-cucumber has been loaded, you can configure it using
+=cusomize-group= on the =erbot-cucumber= customization group.
+
+So that would be typing =M-x customize-group=, followed by
+"=erbot-cucumber=" and hitting [Enter].
+
+Inside of this customization group, there are a bunch of options with
+detailed descriptions that will allow you to modify how the bot runs.
+
+To save and apply your changes, hit =C-x C-s= in the customize buffer.
+
+The options you need to be most concerned with changing are the
+following:
+
+** Basic configuration
+This configuration is required regardless of your testing
+requirements.
+
+*** Erbot Cucumber Feature Location
+This is the single most important option, because it tells the bot
+where your Cucumber test files are... This should point to a path
+that contains your feature files, so if you have a bunch of features
+in a place like =/home/erbot/cucumber/features=, you would need to
+point it to that.
+
+*** Erbot Cucumber Output Path
+This option is pretty important too, because it tells the bot where it
+should dump the results of the Cucumber test. This should be a path on
+the testing box that will be served by the web server at the
+configured [[Erbot Cucumber Test Result Root]].
+
+So, if you had a server serve =/var/www/cucumber/= as
+"=http://staging.int.example.com/cucumber/=", you would want to set
+this to =/var/www/cucumber/=
+
+You should make sure the bot has write permissions to this folder.
+
+*** Erbot Cucumber Test Result Root
+A URL that allows access to the configured [[Erbot Cucumber Output Path]].
+
+So, if you had a server serve =/var/www/cucumber/= as
+"=http://staging.int.example.com/cucumber/=", you would want to set
+this to =http://staging.int.example.com/cucumber/=
+
+When the bot runs for a server, it will create an output file with
+the server name in it, and return the file path as a URL.
+
+For example, if you had the bot test a host configured as =local=:
+
+- =/var/www/cucumber/local.html= would be created.
+- =http://staging.int.example.com/cucumber/local.html= would be the
+  link the bot spits out to the room to let you see the results.
+
+** Multiple hosts
+If you want to be able to have the bot test multiple hosts, the
+following configuration is needed:
+
+*** Erbot Cucumber Host Alist
+This is where your hosts are configured.
+
+By default there is one host called "=local=" inside of a list that
+should look something like the following:
+
+#+BEGIN_SRC elisp
+  (local "http://127.0.0.1" :replace
+         (("http://somehost" . "https://the-right-host")))
+#+END_SRC
+
+You can add or remove hosts with the "=INS=" and "=DEL=" buttons next
+to the host list.
+
+Lets break down what each host consists of:
+
+**** Name
+The =local= you see at the beginning is the name of the host, this is
+the name you will refer to the host in the room... So to test this
+host you would invoke the bot like:
+
+#+BEGIN_EXAMPLE
+  <User> ,test local
+#+END_EXAMPLE
+
+**** TODO Address
+This option isn't used yet, but will be used to allow quick linking
+to the root of the project that is being tested so you can inspect it
+yourself.
+
+Think of it like a bookmark the bot can pull up for you.
+
+**** Replace list
+The relevant information for the replace list in the above example is
+as follows:
+#+BEGIN_SRC elisp
+  :replace (("http://somehost" . "https://the-right-host"))
+#+END_SRC
+
+This whole bit is optional if you don't need it, so it is completely
+valid to have a host configured like:
+#+BEGIN_SRC elisp
+  (local "http://127.0.0.1")
+#+END_SRC
+
+What the replace list does is take every dotted pair, and replaces the
+first half before the dot with the second half after the dot in the
+configured [[Erbot Cucumber Host File]].
+
+You can have as many of these as you like... For example, if in your
+hosts file you have two variables defined for two servers that talk to
+each other like:
+#+BEGIN_SRC ruby
+  @root = "http://test.int.example.com"
+  @other_root = "http://testapi.int.example.com"
+#+END_SRC
+
+...and you wanted to test a second host where the =@root= is supposed
+to be "=https://example.com=" and =@other_root= needs to be
+"=https://api.example.com=", you could configure this host like:
+
+#+BEGIN_SRC elisp
+  (prod "https://example.com" :replace
+        (("http://test.int.example.com" . "https://example.com")
+         ("http://testapi.int.example.com" . "https://api.example.com")))
+#+END_SRC
+
+Then when you invoked the bot like:
+#+BEGIN_EXAMPLE
+  <User> ,test prod
+#+END_EXAMPLE
+
+It would test the right location.
+
+*** Erbot Cucumber Host File
+This is the file where you have your hosts configured for Cucumber
+globally so [[Replace list][the above host replacing]] can work when you configure your
+hosts.
+
+*** Erbot Cucumber Default Host
+If you invoke the bot like:
+#+BEGIN_EXAMPLE
+  <User> ,test prod
+#+END_EXAMPLE
+
+It will test the host [[Erbot Cucumber Host Alist][configured]] as "=prod=". However, if you invoke
+it like this:
+#+BEGIN_EXAMPLE
+  <User> ,test
+#+END_EXAMPLE
+
+It will test the host with the [[Name][name]] configured here.
+
+So, setting this value to "=hargleblargle=" and invoking the bot like:
+#+BEGIN_EXAMPLE
+  <User> ,test
+#+END_EXAMPLE
+
+Would be the same as if you invoked it like:
+#+BEGIN_EXAMPLE
+  <User> ,test hargleblargle
+#+END_EXAMPLE
+
+*** Erbot Cucumber Reset Tree
+When we perform [[Replace list][host file string replacing]], this changes a file in
+our Cucumber file tree...
+
+When we test, we might also add files we don't want to the tree too.
+
+This configuration is a command, or bunch 'o commands that will revert
+the Cucumber folder structure back to how it was before we invoked the
+bot, or reset to the most recent tests.
+
+This could be simply copying over the hosts file with the old version,
+or it could be using [[https://github.com/git/git][git]] to reset the entire tree and pulling new
+changes.
+
+* Using the bot
+Now that you have the bot up and running, the following is a list of
+commands you can use the bot:
+
+| test    | Runs a test on a host             |
+| stop    | Stops a test on a host            |
+| list    | Lists the available hosts         |
+| running | Lists the currently running tests |
+
+Allow me to describe these in greater detail:
+
+* test
+This command is the heart of the bot's functionality... This will
+begin a test on the specified host, or the [[Erbot Cucumber Default Host][default host]] if none are
+specified.
+
+Example:
+#+BEGIN_EXAMPLE
+  <User> ,test
+  <Bot> Started. Results will populate at http://example.com/cucumber/staging.html
+  <User> ,test prod
+  <Bot> Started. Results will populate at http://example.com/cucumber/prod.html
+#+END_EXAMPLE
+
+* stop
+This command stops a test that is currently running.
+
+Example:
+#+BEGIN_EXAMPLE
+  <User> ,test prod
+  <Bot> Started. Results will populate at http://example.com/cucumber/prod.html
+  <User> Oops
+  <User> ,stop prod
+  <Bot> The test for prod is now complete... You may view results here:
+        http://example.com/cucumber/prod.html
+  <Bot> prod stopped...
+#+END_EXAMPLE
+
+* list
+Lists the currently available test hosts.
+
+Example:
+#+BEGIN_EXAMPLE
+  <User> ,list
+  <Bot> (staging prod)  i(cons)
+  <User> ,test WomboCombo
+  <Bot> What's a WomboCombo?
+  <User> ,test staging
+  <Bot> Started. Results will populate at http://example.com/cucumber/staging.html
+#+END_EXAMPLE
+
+* running
+Lists the currently running tests.
+
+Example:
+#+BEGIN_EXAMPLE
+  <User> ,test staging
+  <Bot> Started. Results will populate at http://example.com/cucumber/staging.html
+  <User> ,running
+  <Bot> (staging)  i(cons)
+  <User> ,stop prod
+  <Bot> Cannot find an active process for prod
+  <User> ,test staging
+  <Bot> There is already a test for staging ya dingus! Results:
+        http://example.com/cucumber/staging.html
+  <User> ,test prod
+  <Bot> Started. Results will populate at http://example.com/cucumber/prod.html
+  <User> ,running
+  <Bot> (staging prod)  i(cons)
+  <User> ,stop prod
+  <Bot> The test for prod is now complete... You may view results here:
+        http://example.com/cucumber/prod.html
+  <Bot> prod stopped...
+  <User> ,running
+  <Bot> (staging)  i(cons)
+#+END_EXAMPLE
