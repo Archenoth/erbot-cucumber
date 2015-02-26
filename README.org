@@ -32,6 +32,7 @@ This project assumes you have:
 
 - A Unix-like operating system (Or, [[http://www.mingw.org/][MinGW]] or [[https://www.cygwin.com/][Cygwin]] in your path)
 - [[http://www.gnu.org/software/emacs/][Emacs 24]] or later (It will likely work on Emacs 23, but is untested)
+- A working [[http://www.emacswiki.org/emacs/ErbotInstallation][Erbot]] running in the above Emacs.
 - The ability to run [[https://cukes.info/][Cucumber]] tests on the box the bot runs on
 - An [[http://httpd.apache.org/][HTTP server]]
 
