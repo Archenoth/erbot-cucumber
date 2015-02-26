@@ -304,3 +304,7 @@ Example:
   <User> ,running
   <Bot> (staging)  i(cons)
 #+END_EXAMPLE
+
+* Bugs? Suggestions?
+If you find any bugs or have any suggestions for the runner, feel free
+to post an issue in [[https://github.com/Archenoth/erbot-cucumber/issues][the issue tracker]].
