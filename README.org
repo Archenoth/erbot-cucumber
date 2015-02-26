@@ -31,9 +31,9 @@ And then some time later:
 This project assumes you have:
 
 - A Unix-like operating system (Or, [[http://www.mingw.org/][MinGW]] or [[https://www.cygwin.com/][Cygwin]] in your path)
-- Emacs 24 or later (It will likely work on Emacs 23, but is untested)
-- The ability to run Cucumber tests on the box the bot runs on
-- An HTTP server
+- [[http://www.gnu.org/software/emacs/][Emacs 24]] or later (It will likely work on Emacs 23, but is untested)
+- The ability to run [[https://cukes.info/][Cucumber]] tests on the box the bot runs on
+- An [[http://httpd.apache.org/][HTTP server]]
 
 * Installation
 All you need to do to install this is to load [[file:./erbot-cucumber.el][erbot-cucumber.el]] in the
@@ -59,9 +59,6 @@ Inside of this customization group, there are a bunch of options with
 detailed descriptions that will allow you to modify how the bot runs.
 
 To save and apply your changes, hit =C-x C-s= in the customize buffer.
-
-The options you need to be most concerned with changing are the
-following:
 
 ** Basic configuration
 This configuration is required regardless of your testing
@@ -101,6 +98,12 @@ For example, if you had the bot test a host configured as =local=:
 - =/var/www/cucumber/local.html= would be created.
 - =http://staging.int.example.com/cucumber/local.html= would be the
   link the bot spits out to the room to let you see the results.
+
+*** Erbot Cucumber Exec
+The command to invoke to run Cucumber. This can either be Cucumber
+itself with some specific command line arguments, or a script that
+runs it with some special requirements. (Like running it in [[https://www.xpra.org/][Xpra]] on
+headless servers, or running it over SSH.)
 
 ** Multiple hosts
 If you want to be able to have the bot test multiple hosts, the
@@ -213,7 +216,8 @@ Would be the same as if you invoked it like:
 When we perform [[Replace list][host file string replacing]], this changes a file in
 our Cucumber file tree...
 
-When we test, we might also add files we don't want to the tree too.
+When we test, we might also add files we don't want into the file
+tree.
 
 This configuration is a command, or bunch 'o commands that will revert
 the Cucumber folder structure back to how it was before we invoked the
