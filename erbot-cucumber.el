@@ -208,10 +208,12 @@ returns an IRC-friendly string telling us how it went."
         (erbot-cucumber-begin-test (symbol-name host))
       (concat "What's a " (symbol-name host) "?"))))
 
-(defun fs-stop (host)
+(defun fs-stop (&optional host)
   "Stops a test of a host in *erbot-cucumber-hosts-alist* and
 returns an IRC-friendly string telling us how it went."
-  (erbot-cucumber-stop-test (symbol-name host)))
+  (if (null host)
+      (erbot-cucumber-stop-test *erbot-cucumber-default-host*)
+    (erbot-cucumber-stop-test (symbol-name host))))
 
 (defun fs-list ()
   "Lists available test hosts"
