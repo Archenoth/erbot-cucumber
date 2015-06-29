@@ -112,6 +112,14 @@ to use."
   :group 'erbot-cucumber
   :type 'directory)
 
+(defcustom *erbot-cucumber-use-feature-location-p* t
+  "Whether or not to use the feature location when calling
+Cucumber (Or your script). If nil, the runner assumes that the
+feature files are in the current path, or you have laready
+handled all of that with a script."
+  :group 'erbot-cucumber
+  :type 'boolean)
+
 (defcustom *erbot-cucumber-reset-tree*
   (concat "cd " *erbot-cucumber-feature-location*
           " && git clean -dfx && git reset --hard && git pull")
@@ -179,9 +187,10 @@ IRC-friendly message indiciating how it went."
            (to-replace (getf selected :replace))
            (host-args (getf selected :parameters))
            (base-args
-            (list buffer buffer *erbot-cucumber-exec*
-                  (concat " -o " *erbot-cucumber-output-path* name ".html ")
-                  (concat " -x " *erbot-cucumber-feature-location*))))
+            (nconc (list buffer buffer *erbot-cucumber-exec*
+                        (concat " -o " *erbot-cucumber-output-path* name ".html "))
+                  (when *erbot-cucumber-use-feature-location-p*
+                    (concat " -x " *erbot-cucumber-feature-location*)))))
       (erbot-cucumber-reset-tree)
       (mapc (lambda (r)
               (erbot-replace-in-hosts-file (car r) (cdr r))) to-replace)
