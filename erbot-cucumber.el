@@ -32,29 +32,43 @@ runner for erbots everywhere!"
 
 (defcustom *erbot-cucumber-host-alist*
   '((local "http://127.0.0.1"
-           :replace (("http://somehost" . "https://the-right-host"))))
+           :replace (("http://somehost" . "https://the-right-host"))
+           :parameters ("--format html")))
   "Defines the host alist the bot will recognize for tests...
 
-Each alist entry contains an adress for the host, and optionally,
-a list of dotted pairs that we will replace the first term for
-the second in the configured *erbot-cucumber-host-file*
+Each alist entry contains an address for the host in question,
+and optionally:
+
+  - A list of dotted pairs that we will replace the first term
+    for the second in the configured
+    *erbot-cucumber-host-file*. This should be the list
+    associated with the \":replace\" keyword of the list if
+    present.
+  - A list of parameters to pass to Cucumber or the script. This
+    should be a list associated with the \":parameters\" keyword.
 
 Eg: If you have a variable pointing to your host in Cucumber, and
 it is by default, pointing to your staging staging server at
 \"http://staging\" and you wanted to add a test for your
 production server, which is located at \"https://production\",
-you can do that by adding the following alist entry:
+and you wanted to run the production profile on it, you can do
+that by adding the following alist entry:
 
 (prod \"https://production\"
-  :replace ((\"http://staging\" . \"https://production\")))"
+  :replace ((\"http://staging\" . \"https://production\"))
+  :parameters (\"--profile prod\"))
+
+The reason this is all defined here is because, as a rule, we
+want to accept nothing from IRC that will be directly run in a
+shell. No data, no commands, nothing. Instead, we leave it as an
+exercise to the reader to destroy their own system."
   :group 'erbot-cucumber
   :type '(repeat sexp))
 
 (defcustom *erbot-cucumber-default-host* 'local
   "The default host to test if not specified... So if you invoke
-  \",test\" in the IRC room without speciying what you want to
-  test, it will test the host indicated by this variable
-  instead."
+\",test\" in the IRC room without speciying what you want to
+test, it will test the host indicated by this variable instead."
   :group 'erbot-cucumber
   :type 'symbol)
 
@@ -62,23 +76,22 @@ you can do that by adding the following alist entry:
   "The root where the cucumber HTML pages will be served from.
 
 So, if you had a server serving files from \"http://127.0.0.1\"
-using the folder cucmber outputs its files to, you do not need to
-change this variable... But if they appear in a place like
-\"http://127.0.0.1/cucumber\", you would need to configure
-it... The runner isn't that smart."
+directly, you do not need to change this variable... But if they
+appear in a place like \"https://127.0.0.1/cucumber\", you would
+need to configure this variable to exactly that..."
   :group 'erbot-cucumber
   :type 'string)
 
-(defcustom *erbot-cucumber-exec* "cucumber -f html"
+(defcustom *erbot-cucumber-exec* "cucumber"
   "The cucumber executable or script to call along with any
-command line arguments you wish to pass to it... Default is
-\"cucumber -f -h\" because we likely want to output HTML to the
-file we link to in the IRC room...
+command line arguments you wish to pass to it regardless of the
+host... (For host-specific, look at the
+\"*erbot-cucumber-host-alist*\" variable.)
 
-In actuality, this can be anything that accepts cucumber's
-command line arguments, including shell scripts that perform some
-other task like running xpra so you can use the bot on a headless
-server."
+In actuality, this does not need to avtually point at cucumber,
+but can be anything that accepts cucumber's command line
+arguments, including shell scripts that perform some other task
+like running xpra so you can use the bot on a headless server."
   :type 'string
   :group 'erbot-cucumber)
 
@@ -89,7 +102,7 @@ location.)
 
 This will be the place that Cucumber puts the results it creates,
 and should also be accessible by looking at the configured
-*erbot-cucumber-test-result-root*"
+*erbot-cucumber-test-result-root* in a browser of some form."
   :group 'erbot-cucumber
   :type 'directory)
 
@@ -115,7 +128,7 @@ very-well may work out of the box.)"
 (defcustom *erbot-cucumber-host-file*
   "cucumber/features/step_definitions/constants.rb"
   "The file that contains the the configuration for the host to
-test. we will replace the old host(s) with the new host(s) before
+test. We will replace the old host(s) with the new host(s) before
 running cucumber. (As per *erbot-cucumber-host-alist*)"
   :group 'erbot-cucumber
   :type '(file :must-match t))
@@ -161,18 +174,18 @@ IRC-friendly message indiciating how it went."
   (if (assoc name *erbot-cucumber-processes*)
       (concat "There is already a test for " name " ya dingus! Results: "
               (erbot-cucumber-get-test-url name))
-    (let ((to-replace (getf (assoc (intern name) *erbot-cucumber-host-alist*)
-                            :replace))
-          (buffer (concat name "-test")))
+    (let* ((buffer (concat name "-test"))
+           (selected (assoc (intern name) *erbot-cucumber-host-alist*))
+           (to-replace (getf selected :replace))
+           (host-args (getf selected :parameters))
+           (base-args
+            (list buffer buffer *erbot-cucumber-exec*
+                  (concat " -o " *erbot-cucumber-output-path* name ".html ")
+                  (concat " -x " *erbot-cucumber-feature-location*))))
       (erbot-cucumber-reset-tree)
       (mapc (lambda (r)
               (erbot-replace-in-hosts-file (car r) (cdr r))) to-replace)
-      (let ((process (start-process buffer buffer *erbot-cucumber-exec*
-                                    (concat " -o "
-                                            *erbot-cucumber-output-path*
-                                            name ".html ")
-                                    (concat " -x "
-                                            *erbot-cucumber-feature-location*))))
+      (let ((process (apply #'start-process (append base-args host-args))))
         (pushnew (cons name process) *erbot-cucumber-processes*)
         (set-process-sentinel process (erbot-cucumber-make-test-sentenal
                                        name))
