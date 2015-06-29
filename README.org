@@ -2,7 +2,7 @@
 #+AUTHOR:Archenoth
 #+STARTUP:hidestars
 
-Erbot Cucumber is an [[http://www.emacswiki.org/emacs/ErBot][Erbot]] based [[https://cukes.info/][Cucumber]] test-suite runner...
+Erbot Cucumber is an [[http://www.emacswiki.org/emacs/ErBot][Erbot]] based [[https://cucumber.io/][Cucumber]] test-suite runner...
 
 Pretty much, it allows you to issue commands to a bot in an IRC
 channel and -- when commanded, your robot slave will fire up an
@@ -22,7 +22,7 @@ A typical test command would likely look like the following:
 #+END_EXAMPLE
 
 And then some time later:
-#+BEGIN_EXAMPLE  .
+#+BEGIN_EXAMPLE
   <Bot> The test for staging is now complete... You may view results here:
         http://example.com/cucumber/staging.html
 #+END_EXAMPLE
@@ -41,7 +41,7 @@ All you need to do to install this is to load [[file:./erbot-cucumber.el][erbot-
 configuration file for your erbot-running version of Emacs.
 
 So in your =.emacs= or =init.el=, you should have a line like:
-#+BEGIN_SRC elisp
+#+BEGIN_SRC elisp :eval no
   (load "/path/to/erbot-cucumber.el")
 #+END_SRC
 (...obviously replacing =/path/to/erbot-cucumber.el= with the actual
@@ -116,9 +116,9 @@ This is where your hosts are configured.
 By default there is one host called "=local=" inside of a list that
 should look something like the following:
 
-#+BEGIN_SRC elisp
-  (local "http://127.0.0.1" :replace
-         (("http://somehost" . "https://the-right-host")))
+#+BEGIN_SRC elisp :eval no
+  (local "http://127.0.0.1"
+         :replace (("http://somehost" . "https://the-right-host")))
 #+END_SRC
 
 You can add or remove hosts with the "=INS=" and "=DEL=" buttons next
@@ -145,13 +145,13 @@ Think of it like a bookmark the bot can pull up for you.
 **** Replace list
 The relevant information for the replace list in the above example is
 as follows:
-#+BEGIN_SRC elisp
+#+BEGIN_SRC elisp :eval no
   :replace (("http://somehost" . "https://the-right-host"))
 #+END_SRC
 
 This whole bit is optional if you don't need it, so it is completely
 valid to have a host configured like:
-#+BEGIN_SRC elisp
+#+BEGIN_SRC elisp :eval no
   (local "http://127.0.0.1")
 #+END_SRC
 
@@ -162,7 +162,7 @@ configured [[Erbot Cucumber Host File]].
 You can have as many of these as you like... For example, if in your
 hosts file you have two variables defined for two servers that talk to
 each other like:
-#+BEGIN_SRC ruby
+#+BEGIN_SRC ruby :eval no
   @root = "http://test.int.example.com"
   @other_root = "http://testapi.int.example.com"
 #+END_SRC
@@ -171,10 +171,10 @@ each other like:
 to be "=https://example.com=" and =@other_root= needs to be
 "=https://api.example.com=", you could configure this host like:
 
-#+BEGIN_SRC elisp
-  (prod "https://example.com" :replace
-        (("http://test.int.example.com" . "https://example.com")
-         ("http://testapi.int.example.com" . "https://api.example.com")))
+#+BEGIN_SRC elisp :eval no
+  (prod "https://example.com"
+        :replace (("http://test.int.example.com" . "https://example.com")
+                  ("http://testapi.int.example.com" . "https://api.example.com")))
 #+END_SRC
 
 Then when you invoked the bot like:
@@ -183,6 +183,23 @@ Then when you invoked the bot like:
 #+END_EXAMPLE
 
 It would test the right location.
+
+**** Parameter list
+Say you want to test something with a particular Cucumber [[https://github.com/cucumber/cucumber/wiki/Tags][tag]], how do
+you do that? You can add a =:parameter= section to a host, which
+would look like so:
+
+#+BEGIN_SRC elisp :eval no
+  (prod "https://example.com"
+        :replace (("http://test.int.example.com" . "https://example.com")
+                  ("http://testapi.int.example.com" . "https://api.example.com"))
+        :parameters ("-f rerun" "--out failed-tests.txt"))
+#+END_SRC
+
+This would add the "=-f rerun=" and "=--out failed-tests.txt="
+parameters to the end of the eventual Cucumber run.
+
+Of course, this bit is optional as well.
 
 *** Erbot Cucumber Host File
 This is the file where you have your hosts configured for Cucumber
