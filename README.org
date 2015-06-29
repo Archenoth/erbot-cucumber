@@ -66,11 +66,19 @@ This configuration is required regardless of your testing
 requirements.
 
 *** Erbot Cucumber Feature Location
-This is the single most important option, because it tells the bot
-where your Cucumber test files are... This should point to a path
-that contains your feature files, so if you have a bunch of features
-in a place like =/home/erbot/cucumber/features=, you would need to
-point it to that.
+This configuration tells the bot where your Cucumber test files
+are... This should point to a path that contains your feature files,
+so if you have a bunch of features in a place like
+=/home/erbot/cucumber/features=, you would need to point it to that.
+
+*** Erbot Cucumber Use Feature Location P
+This is a predicate that determines whether or not to invoke cucumber
+with the [[Erbot Cucumber Feature Location]], this is here for those who
+want to configure the feature file usage manually, either by keeping
+them in the current working folder of the bot, or though a script.
+
+It is easier to keep it on, but you can do more with it off. (Like
+create a "rerun" test that only reruns failed tests.)
 
 *** Erbot Cucumber Output Path
 This option is pretty important too, because it tells the bot where it
