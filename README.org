@@ -143,10 +143,9 @@ host you would invoke the bot like:
   <User> ,test local
 #+END_EXAMPLE
 
-**** TODO Address
-This option isn't used yet, but will be used to allow quick linking
-to the root of the project that is being tested so you can inspect it
-yourself.
+**** Address
+This option is used to allow quick linking to the root of the project
+that is being tested so you can inspect it.
 
 Think of it like a bookmark the bot can pull up for you.
 
@@ -257,10 +256,11 @@ changes.
 Now that you have the bot up and running, the following is a list of
 commands you can use the bot:
 
-| test    | Runs a test on a host             |
-| stop    | Stops a test on a host            |
-| list    | Lists the available hosts         |
-| running | Lists the currently running tests |
+| test    | Runs a test on a host              |
+| stop    | Stops a test on a host             |
+| hosts   | Lists the available hosts          |
+| host    | Details info for a particular host |
+| running | Lists the currently running tests  |
 
 Allow me to describe these in greater detail:
 
@@ -291,17 +291,30 @@ Example:
   <Bot> prod stopped...
 #+END_EXAMPLE
 
-* list
+* hosts
 Lists the currently available test hosts.
 
 Example:
 #+BEGIN_EXAMPLE
-  <User> ,list
-  <Bot> (staging prod)  i(cons)
+  <User> ,hosts
+  <Bot> Hosts: staging prod super-serious-business
   <User> ,test WomboCombo
   <Bot> What's a WomboCombo?
-  <User> ,test staging
-  <Bot> Started. Results will populate at http://example.com/cucumber/staging.html
+  <User> ,test super-serious-business
+  <Bot> Started. Results will populate at http://example.com/cucumber/super-serious-business.html
+#+END_EXAMPLE
+
+* host
+Lists information about a particular host.
+
+Example:
+
+#+BEGIN_EXAMPLE
+  <User> ,hosts
+  <Bot> Hosts: staging prod super-serious-business
+  <User> ,host super-serious-business
+  <Bot> super-serious-business is at: http://serious.example.com with test
+        results that populate at: http://example.com/cucumber/super-serious-business.html
 #+END_EXAMPLE
 
 * running
@@ -312,7 +325,7 @@ Example:
   <User> ,test staging
   <Bot> Started. Results will populate at http://example.com/cucumber/staging.html
   <User> ,running
-  <Bot> (staging)  i(cons)
+  <Bot> Currently running tests: staging URL: http://example.com/cucumber/staging.html
   <User> ,stop prod
   <Bot> Cannot find an active process for prod
   <User> ,test staging
@@ -321,13 +334,14 @@ Example:
   <User> ,test prod
   <Bot> Started. Results will populate at http://example.com/cucumber/prod.html
   <User> ,running
-  <Bot> (staging prod)  i(cons)
+  <Bot> Currently running tests: staging URL: http://example.com/cucumber/staging.html
+        prod URL: http://example.com/cucumber/prod.html
   <User> ,stop prod
   <Bot> The test for prod is now complete... You may view results here:
         http://example.com/cucumber/prod.html
   <Bot> prod stopped...
   <User> ,running
-  <Bot> (staging)  i(cons)
+  <Bot> Currently running tests: staging URL: http://example.com/cucumber/staging.html
 #+END_EXAMPLE
 
 * Bugs? Suggestions?
