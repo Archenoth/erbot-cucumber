@@ -159,7 +159,10 @@ function that can be be passed to set-process-sentinal. It will
 spit out relevant information to the room the bot was invoked
 when the test either completes, or fails miserably. (When the
 process ends)"
-  ;; Because lexical might not be a thing in this Emacs
+  ;; Names are like this because lexical might not be a thing in this
+  ;; Emacs... Though I suppose it doesn't matter if other lexical
+  ;; features are used elsewhere. I just want to make sure we hold
+  ;; that data before it changes on us.
   (let ((procc proc)
         (nickc nick)
         (tgtc tgt)
@@ -187,8 +190,9 @@ IRC-friendly message indiciating how it went."
            (to-replace (getf selected :replace))
            (host-args (getf selected :parameters))
            (base-args
-            (nconc (list buffer buffer *erbot-cucumber-exec*
-                        (concat " -o " *erbot-cucumber-output-path* name ".html "))
+            (nconc
+             (list buffer buffer *erbot-cucumber-exec*
+                   (concat " -o " *erbot-cucumber-output-path* name ".html "))
                   (when *erbot-cucumber-use-feature-location-p*
                     (concat " -x " *erbot-cucumber-feature-location*)))))
       (erbot-cucumber-reset-tree)
@@ -237,10 +241,26 @@ returns an IRC-friendly string telling us how it went."
       (erbot-cucumber-stop-test *erbot-cucumber-default-host*)
     (erbot-cucumber-stop-test (symbol-name host))))
 
-(defun fs-list ()
+(defun fs-hosts ()
   "Lists available test hosts"
-  (mapcar (lambda (host) (car host)) *erbot-cucumber-host-alist*))
+  (reduce
+   (lambda (result host) (concat result " " (prin1-to-string (car host))))
+   *erbot-cucumber-host-alist* :initial-value "Hosts:"))
+
+(defun fs-host (host)
+  "Returns a description of an individual host."
+  (let ((host-name (symbol-name host)))
+    (concat host-name " is at: "
+            (cadr (assoc host *erbot-cucumber-host-alist*))
+            " with test results that populate at: "
+            (erbot-cucumber-get-test-url host-name))))
 
 (defun fs-running ()
   "Lists currently running tests"
-  (mapcar (lambda (host) (car host)) *erbot-cucumber-processes*))
+  (if *erbot-cucumber-processes*
+      (reduce
+       (lambda (result host)
+         (let ((url (erbot-cucumber-get-test-url (car host))))
+           (concat result " " (concat (car host) " URL: " url))))
+       *erbot-cucumber-processes* :initial-value "Currently running tests:")
+    "Nothing running currently."))
